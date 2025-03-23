@@ -30,69 +30,41 @@ app_theme <- bs_theme(
 browser_title <- "> r&ma"
 service_title <- "> r&ma"
 
-<<<<<<< HEAD
 # app_side_bar <- sidebar(
+#   hr(), 
 #   tags$a(
 #     href = "https://github.com/l-ramirez-lopez/imperial_retail_project",
 #     "Visit our project in GitHub",
 #     target = "_blank"
-#   ),
-#   hr()
+#   )
 # )
 
-
 app_nav_bar <- page_navbar(
-=======
-app_side_bar <- sidebar(
-  hr(), 
-  tags$a(
-    href = "https://github.com/l-ramirez-lopez/imperial_retail_project",
-    "Visit our project in GitHub",
-    target = "_blank"
-  )
-)
-
-app_nav_bar <- page_navbar(
-  sidebar = app_side_bar,
->>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
+  # sidebar = app_side_bar,
   title = HTML(paste0(service_title, imperial_logo)),
   theme = app_theme,
   
   # --- Summary Tab
   nav_panel(
     "Overview",
-<<<<<<< HEAD
     plotlyOutput("my_overview")
-=======
-    uiOutput("file_summary")
->>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   ),
   
   # --- File Summary Tab
   nav_panel(
     "Demand forecasting",
-<<<<<<< HEAD
     uiOutput("demand_forecasting")
-=======
-    uiOutput("file_summary")
->>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   ),
   
   # --- Build Application Tab
   nav_panel(
     "Feature promotion",
-<<<<<<< HEAD
     uiOutput("feature_promotion")
-=======
-    uiOutput("build_app")
->>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   ),
   
   # --- Build Application Tab
   nav_panel(
     "Price elasticity and scenario testing",
-<<<<<<< HEAD
-
     fluidRow(
       # ---- Box 1: Dropdown + Table ----
       column(
@@ -173,9 +145,6 @@ app_nav_bar <- page_navbar(
   nav_panel(
     "REAMDE!",
     uiOutput("readme")
-=======
-    uiOutput("build_app")
->>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   )
 )
 
