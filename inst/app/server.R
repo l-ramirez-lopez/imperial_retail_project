@@ -143,4 +143,20 @@ shinyServer(function(input, output, session) {
       
     })
   })
+  ####################################################################
+  ## --- FEATURE PROMOTION ----
+  ####################################################################
+  
+  observe({
+    scanpro_results <- run_feature_scanpro_model(datar_w_cp)
+    promotion_analysis <- plot_feature_promotion_impact(scanpro_results, datar_w_cp)
+    psales <- ggplotly(promotion_analysis$sales_chart)
+    pincremental <- ggplotly(promotion_analysis$incremental_chart)
+    prevenue <- ggplotly(promotion_analysis$revenue_chart)
+    
+    output$plot_sales <- renderPlotly({psales})
+    output$plot_incremental <- renderPlotly({pincremental})
+    output$plot_revenue <- renderPlotly({prevenue})
+  })
+  
 })

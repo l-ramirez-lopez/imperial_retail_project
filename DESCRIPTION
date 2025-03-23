@@ -17,6 +17,7 @@ License: file LICENSE
 URL: https://github.com/l-ramirez-lopez/imperial_retail_project
 Imports: 
     bslib,
+    broom,
     data.table,
     dplyr,
     DT,

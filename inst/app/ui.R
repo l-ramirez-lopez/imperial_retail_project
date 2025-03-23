@@ -47,7 +47,17 @@ app_nav_bar <- page_navbar(
   # --- Summary Tab
   nav_panel(
     "Overview",
-    plotlyOutput("my_overview")
+    fluidRow(
+      column(
+        width = 4,
+        card(
+          card_header("Average weekly sales by product functionality"),
+          card_body(
+            plotlyOutput("my_overview")
+          )
+        )
+      )
+    )
   ),
   
   # --- File Summary Tab
@@ -59,7 +69,35 @@ app_nav_bar <- page_navbar(
   # --- Build Application Tab
   nav_panel(
     "Feature promotion",
-    uiOutput("feature_promotion")
+    fluidRow(
+     column(
+        width = 4,
+        card(
+          card_header("Feature promotion impact: Sales comparison"),
+          card_body(
+            plotlyOutput("plot_sales")
+          )
+        )
+      ), 
+      column(
+        width = 4,
+        card(
+          card_header("Incremental sales from feature promotion"),
+          card_body(
+            plotlyOutput("plot_incremental")
+          )
+        )
+      ), 
+     column(
+       width = 4,
+       card(
+         card_header("Incremental revenue from feature promotion"),
+         card_body(
+           plotlyOutput("plot_revenue")
+         )
+       )
+     )
+    )
   ),
   
   # --- Build Application Tab

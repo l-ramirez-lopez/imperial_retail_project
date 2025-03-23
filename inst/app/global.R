@@ -145,7 +145,21 @@ aa <- datar_w_cp %>%
   ggplot(aes(x = reorder(Functionality, avg_sales), y = avg_sales)) +
   geom_col(fill = "#63b046") +
   coord_flip() +
-  labs(title = "Average Weekly Sales by Product Functionality",
+  labs(
+    # title = "Average Weekly Sales by Product Functionality",
        x = "Functionality",
-       y = "Average Weekly Sales")
+       y = "Average Weekly Sales") +
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA),
+    axis.ticks = element_line(color = "white"), 
+    # panel.background = element_rect(fill = "transparent", color = NA),
+    panel.grid.major = element_line(color = "gray70"),
+    panel.grid.minor = element_line(color = "gray70"),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    strip.text = element_text(color = "white"),
+    legend.text = element_text(color = "white"),
+    legend.title = element_text(color = "white"),
+  )
 

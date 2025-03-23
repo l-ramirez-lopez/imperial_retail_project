@@ -1,0 +1,344 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# Load required libraries
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(broom)
+```
+
+```{r}
+# Read data
+data <- read.csv("data_processed_comp.csv", stringsAsFactors = FALSE)
+
+# Convert week to date format for time-based analysis
+data$week <- as.Date(data$week)
+```
+
+```{r}
+run_feature_scanpro_model <- function(df) {
+  
+  # Initialize results dataframe
+  scanpro_results <- data.frame()
+  
+  # Get unique SKUs
+  skus <- unique(df$sku)
+  
+  # Process each SKU
+  for (current_sku in skus) {
+    # Filter data for current SKU and weeks with no sales (cannot be handled in log model)
+    sku_data <- filter(df, sku == current_sku & weekly_sales > 0)
+    
+    # Get product functionality for this SKU
+    functionality_cols <- names(df)[grepl("functionality_", names(df))]
+    sku_func_data <- sku_data[1, functionality_cols]
+    product_type_col <- functionality_cols[which(sku_func_data == 1)]
+    product_type <- if(length(product_type_col) > 0) {
+      gsub("functionality_\\d+\\.", "", product_type_col[1])
+    } else {
+      "Unknown"
+    }
+    
+    # Get color, vendor for this SKU
+    color <- unique(sku_data$Color)[1]
+    vendor <- unique(sku_data$Vendor)[1]
+    
+    # Try to fit the model
+    if (nrow(sku_data) >= 10) {  # Minimum threshold for reliable estimation
+      # Check if we have enough observations with and without feature
+      n_featured <- sum(sku_data$feat_main_page == 1)
+      n_not_featured <- sum(sku_data$feat_main_page == 0)
+      
+      if (n_featured >= 3 && n_not_featured >= 3) { # Need some minimum observations in each group
+        # Log-linear model
+        model <- lm(log(weekly_sales) ~ feat_main_page + log(price) + 
+             month_2 + month_3 + month_4 + month_5 + month_6 + 
+             month_7 + month_8 + month_9 + month_10 + month_11 + month_12 + 
+             trend, 
+             data = sku_data)
+        
+        # Skip if model failed
+        if (is.null(model)) next
+        
+        # Extract model summary and coefficients
+        model_summary <- summary(model)
+        coefs <- coef(model_summary)
+        
+        # Get feature promotion coefficient and statistics
+        if ("feat_main_page" %in% rownames(coefs)) {
+          feature_coef <- coefs["feat_main_page", "Estimate"]
+          feature_se <- coefs["feat_main_page", "Std. Error"]
+          feature_pvalue <- coefs["feat_main_page", "Pr(>|t|)"]
+          
+          # Get price elasticity if available
+          price_elasticity <- if ("log(price)" %in% rownames(coefs)) {
+            coefs["log(price)", "Estimate"]
+          } else {
+            NA
+          }
+          price_pvalue <- if ("log(price)" %in% rownames(coefs)) {
+            coefs["log(price)", "Pr(>|t|)"]
+          } else {
+            NA
+          }
+          
+          # Calculate feature promotion multiplier (lift ratio)
+          feature_multiplier <- exp(feature_coef)
+          
+          # Calculate lift percentage
+          feature_lift_pct <- (feature_multiplier - 1) * 100
+          
+          # Calculate 95% confidence interval for lift
+          lower_ci <- exp(feature_coef - 1.96 * feature_se) - 1
+          upper_ci <- exp(feature_coef + 1.96 * feature_se) - 1
+          
+          # Calculate 90% confidence interval for lift (z=1.645 for 90% CI)
+          lower_ci_90 <- exp(feature_coef - 1.645 * feature_se) - 1
+          upper_ci_90 <- exp(feature_coef + 1.645 * feature_se) - 1
+          
+          # Calculate baseline and featured sales
+          baseline_data <- filter(sku_data, feat_main_page == 0)
+          featured_data <- filter(sku_data, feat_main_page == 1)
+          
+          # Get actual observed sales
+          baseline_sales <- if (nrow(baseline_data) > 0) mean(baseline_data$weekly_sales) else NA
+          actual_featured_sales <- if (nrow(featured_data) > 0) mean(featured_data$weekly_sales) else NA
+          
+          # Calculate model-predicted featured sales
+          model_featured_sales <- baseline_sales * feature_multiplier
+          
+          # Calculate incremental sales (units)
+          incremental_sales <- baseline_sales * (feature_multiplier - 1)
+          actual_incremental_sales <- if (!is.na(actual_featured_sales)) actual_featured_sales - baseline_sales else NA
+          
+          # Calculate average price and revenue
+          avg_price <- mean(sku_data$price)
+          baseline_price <- if (nrow(baseline_data) > 0) mean(baseline_data$price) else NA
+          featured_price <- if (nrow(featured_data) > 0) mean(featured_data$price) else NA
+          
+          # Calculate revenue metrics
+          avg_revenue <- mean(sku_data$Revenue)
+          baseline_revenue <- if (nrow(baseline_data) > 0) mean(baseline_data$Revenue) else NA
+          featured_revenue <- if (nrow(featured_data) > 0) mean(featured_data$Revenue) else NA
+          incremental_revenue <- baseline_revenue * (feature_multiplier - 1)
+          actual_incremental_revenue <- if (!is.na(featured_revenue)) featured_revenue - baseline_revenue else NA
+          
+          # Get date information - keep all dates for flexible graphing later
+          dates <- sku_data$week
+          
+          # Calculate MAPE 
+          predicted_values <- exp(predict(model, newdata = sku_data))
+          actual_values <- sku_data$weekly_sales
+          percentage_errors <- abs((actual_values - predicted_values) / actual_values) * 100
+          mape <- mean(percentage_errors, na.rm = TRUE)
+          
+          # Store results
+          sku_result <- data.frame(
+            sku = current_sku,
+            product_type = product_type,
+            vendor = vendor,
+            color = color,
+            dates = list(dates),
+            n_obs = nrow(sku_data), # total observations
+            n_featured = n_featured, # no. of weeks featured
+            n_not_featured = n_not_featured, #no. of weeks not featured
+            baseline_sales = baseline_sales, # weekly sales when not featured
+            actual_featured_sales = actual_featured_sales, # actual sales when featured
+            model_featured_sales = model_featured_sales, # predicted sales when featured
+            baseline_price = baseline_price, # average price when not featured
+            featured_price = featured_price, # average price when featured
+            avg_price = avg_price, # overall average price
+            baseline_revenue = baseline_revenue, # average revenue when not featured
+            featured_revenue = featured_revenue, # average revenue when featured
+            avg_revenue = avg_revenue, # overall average revenue
+            feature_coef = feature_coef, # coefficient for feature variable
+            feature_se = feature_se, # s.e. for feature coefficient
+            feature_multiplier = feature_multiplier, # exponential of feature coefficient
+            promo_lift_pct = feature_lift_pct, # % increase in sales due to feature
+            lower_ci_pct = lower_ci * 100, # lower bound 95% CI
+            upper_ci_pct = upper_ci * 100, # upper bound 95% CI
+            lower_ci_90_pct = lower_ci_90 * 100, # lower bound 90% CI
+            upper_ci_90_pct = upper_ci_90 * 100, # upper bound 90% CI
+            incremental_sales = incremental_sales, # predicted additional sales due to feature
+            actual_incremental_sales = actual_incremental_sales, # actual additional sales due to feature
+            incremental_revenue = incremental_revenue, # predicted additional revenue due to feature
+            actual_incremental_revenue = actual_incremental_revenue, # actual additional revenue due to feature
+            price_elasticity = price_elasticity, # price elasticity coefficient
+            promo_significant = feature_pvalue < 0.05, # whether feature is statistically significant
+            price_significant = !is.na(price_pvalue) && price_pvalue < 0.05, # whether price is statistically significant
+            r_squared = model_summary$r.squared, # r square 
+            adj_r_squared = model_summary$adj.r.squared, # adjusted r square
+            mape = mape
+          )
+          
+          # Add to results
+          scanpro_results <- rbind(scanpro_results, sku_result)
+        }
+      }
+    }
+  }
+  
+  # Sort results by promotion lift
+  scanpro_results <- scanpro_results %>% arrange(desc(promo_lift_pct))
+  
+  # Print accuracy statistics
+  cat("Average MAPE:", mean(scanpro_results$mape, na.rm = TRUE), "%\n")
+  cat("Average R-squared:", mean(scanpro_results$r_squared, na.rm = TRUE), "\n")
+  cat("Average Adjusted R-squared:", mean(scanpro_results$adj_r_squared, na.rm = TRUE), "\n")
+  
+  return(scanpro_results)
+}
+```
+
+```{r}
+scanpro_results <- run_feature_scanpro_model(data)
+```
+
+Sample viz code, feel free to delete if not required
+
+```{r}
+plot_feature_promotion_impact <- function(scanpro_results, df) {
+  # Filter for significant results
+  significant_results <- scanpro_results %>%
+    filter(promo_significant == TRUE)
+  
+  # Group by SKU to get unique SKUs with mean values for each metric
+  unique_significant_results <- significant_results %>%
+    group_by(sku) %>%
+    summarise(
+      baseline_sales = mean(baseline_sales),
+      model_featured_sales = mean(model_featured_sales),
+      promo_lift_pct = mean(promo_lift_pct),
+      lower_ci_pct = mean(lower_ci_pct),
+      upper_ci_pct = mean(upper_ci_pct),
+      incremental_sales = mean(incremental_sales),
+      baseline_revenue = mean(baseline_revenue),
+      featured_revenue = mean(featured_revenue),
+      incremental_revenue = mean(incremental_revenue),
+      # Calculate CIs for incremental sales
+      incremental_sales_lower_ci = mean(incremental_sales * (1 + (lower_ci_pct - promo_lift_pct) / promo_lift_pct)),
+      incremental_sales_upper_ci = mean(incremental_sales * (1 + (upper_ci_pct - promo_lift_pct) / promo_lift_pct)),
+      # Calculate CIs for incremental revenue
+      incremental_revenue_lower_ci = mean(incremental_revenue * (1 + (lower_ci_pct - promo_lift_pct) / promo_lift_pct)),
+      incremental_revenue_upper_ci = mean(incremental_revenue * (1 + (upper_ci_pct - promo_lift_pct) / promo_lift_pct)),
+      .groups = 'drop'
+    )
+  
+  # For visualization, focus on top SKUs by promotion lift
+  top_skus <- head(unique_significant_results %>% 
+                     arrange(desc(promo_lift_pct)) %>% 
+                     pull(sku), 
+                   min(15, nrow(unique_significant_results)))
+  
+  plot_data <- unique_significant_results %>%
+    filter(sku %in% top_skus) %>%
+    # Store original SKU value before converting to factor
+    mutate(sku_original = sku,
+           # Create unique labels to prevent duplicate factor levels
+           sku_label = paste0(sku),
+           # Create factor with these unique labels
+           sku = factor(sku_label, levels = sku_label[order(promo_lift_pct, decreasing = TRUE)]))
+  
+  # Convert to long format for side-by-side bar chart
+  plot_data_long <- plot_data %>%
+    select(sku, baseline_sales, model_featured_sales) %>%
+    pivot_longer(cols = c(baseline_sales, model_featured_sales),
+                 names_to = "sales_type", 
+                 values_to = "sales") %>%
+    mutate(sales_type = factor(sales_type, 
+                             levels = c("baseline_sales", "model_featured_sales"),
+                             labels = c("No Feature", "Featured")))
+  
+  # Create bar chart comparing non-featured and featured sales
+  sales_chart <- ggplot(plot_data_long, aes(x = sku, y = sales, fill = sales_type)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    scale_fill_manual(values = c("No Feature" = "gray70", 
+                               "Featured" = "steelblue")) +
+    labs(title = "Feature Promotion Impact: Sales Comparison",
+         subtitle = "Average weekly sales when featured vs. not featured on main page",
+         x = "SKU",
+         y = "Average Weekly Sales",
+         fill = "Feature Status") +
+    theme_minimal() +
+    theme(
+      axis.text.y = element_text(size = 9),
+      legend.position = "top"
+    ) +
+    coord_flip()
+  
+  # Create incremental sales chart with 95% CI
+  incremental_chart <- ggplot(plot_data, aes(x = reorder(as.factor(sku), incremental_sales), y = incremental_sales)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    geom_errorbar(aes(ymin = incremental_sales_lower_ci, ymax = incremental_sales_upper_ci), 
+                 width = 0.3, color = "black") +
+    geom_text(aes(label = round(incremental_sales, 1)), hjust = -0.1, size = 3) +
+    coord_flip() +
+    labs(title = "Incremental Sales from Feature Promotion",
+         subtitle = "Additional units sold when featured on main page (with 95% confidence intervals)",
+         x = "SKU",
+         y = "Incremental Sales (Units)") +
+    theme_minimal()
+    
+  # Create incremental revenue chart with 95% CI
+  revenue_chart <- ggplot(plot_data, aes(x = reorder(as.factor(sku), incremental_revenue), y = incremental_revenue)) +
+    geom_bar(stat = "identity", fill = "darkgreen") +
+    geom_errorbar(aes(ymin = incremental_revenue_lower_ci, ymax = incremental_revenue_upper_ci), 
+                 width = 0.3, color = "black") +
+    geom_text(aes(label = paste0("$", round(incremental_revenue, 2))), hjust = -0.1, size = 3) +
+    coord_flip() +
+    labs(title = "Incremental Revenue from Feature Promotion",
+         subtitle = "Additional revenue when featured on main page (with 95% confidence intervals)",
+         x = "SKU",
+         y = "Incremental Revenue ($)") +
+    theme_minimal()
+  
+  # Create a table of summary statistics
+  summary_stats <- data.frame(
+    Metric = c(
+      "Number of SKUs with significant promotion effect",
+      "Average promotion lift across all significant SKUs",
+      "Highest promotion lift",
+      "Lowest promotion lift",
+      "Average baseline sales (units)",
+      "Average promoted sales (units)",
+      "Average incremental sales (units)"
+    ),
+    Value = c(
+      length(unique(significant_results$sku)),  # Count unique SKUs
+      paste0(round(mean(unique_significant_results$promo_lift_pct, na.rm = TRUE), 2), "%"),
+      paste0(round(max(unique_significant_results$promo_lift_pct, na.rm = TRUE), 2), "%"),
+      paste0(round(min(unique_significant_results$promo_lift_pct, na.rm = TRUE), 2), "%"),
+      round(mean(unique_significant_results$baseline_sales, na.rm = TRUE), 2),
+      round(mean(unique_significant_results$model_featured_sales, na.rm = TRUE), 2),
+      round(mean(unique_significant_results$incremental_sales, na.rm = TRUE), 2)
+    )
+  )
+  
+  return(list(
+    sales_chart = sales_chart, 
+    incremental_chart = incremental_chart,
+    revenue_chart = revenue_chart,
+    significant_results = significant_results,
+    summary_stats = summary_stats
+  ))
+}
+```
+
+
+```{r}
+# Generate all visualizations and summary statistics
+promotion_analysis <- plot_feature_promotion_impact(scanpro_results, data)
+
+# View individual charts
+promotion_analysis$sales_chart  # Compare sales with/without featuring
+promotion_analysis$incremental_chart  # Shows additional units sold
+promotion_analysis$revenue_chart # Shows additional revenue made
+
+# View summary statistics
+promotion_analysis$summary_stats
+```
+
