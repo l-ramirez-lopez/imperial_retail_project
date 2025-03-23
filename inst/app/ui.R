@@ -30,6 +30,19 @@ app_theme <- bs_theme(
 browser_title <- "> r&ma"
 service_title <- "> r&ma"
 
+<<<<<<< HEAD
+# app_side_bar <- sidebar(
+#   tags$a(
+#     href = "https://github.com/l-ramirez-lopez/imperial_retail_project",
+#     "Visit our project in GitHub",
+#     target = "_blank"
+#   ),
+#   hr()
+# )
+
+
+app_nav_bar <- page_navbar(
+=======
 app_side_bar <- sidebar(
   hr(), 
   tags$a(
@@ -41,31 +54,128 @@ app_side_bar <- sidebar(
 
 app_nav_bar <- page_navbar(
   sidebar = app_side_bar,
+>>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   title = HTML(paste0(service_title, imperial_logo)),
   theme = app_theme,
   
   # --- Summary Tab
   nav_panel(
     "Overview",
+<<<<<<< HEAD
+    plotlyOutput("my_overview")
+=======
     uiOutput("file_summary")
+>>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   ),
   
   # --- File Summary Tab
   nav_panel(
     "Demand forecasting",
+<<<<<<< HEAD
+    uiOutput("demand_forecasting")
+=======
     uiOutput("file_summary")
+>>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   ),
   
   # --- Build Application Tab
   nav_panel(
     "Feature promotion",
+<<<<<<< HEAD
+    uiOutput("feature_promotion")
+=======
     uiOutput("build_app")
+>>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   ),
   
   # --- Build Application Tab
   nav_panel(
     "Price elasticity and scenario testing",
+<<<<<<< HEAD
+
+    fluidRow(
+      # ---- Box 1: Dropdown + Table ----
+      column(
+        width = 4,
+        card(
+          card_header("Lambda parameter"),
+          card_body(
+            selectInput(
+              inputId = "my_dropdown_elast", 
+              label = "Choose a lambda parameter for the adstock model:",
+              choices = my_lambdas$lambda_user, 
+              selected = "0.7 (high)"
+            )
+          ), 
+          height = "275px"
+        )
+      ), 
+      column(
+        width = 4,
+        card(
+          card_header("SKU and variable"),
+          card_body(
+            sliderInput(
+              inputId = "my_price_change",
+              label = "Pick a value for the price change:",
+              min = min_price_change,
+              max = max_price_change,
+              value = 0,  # Center value
+              step = 1
+            ),
+            selectInput(
+              inputId = "my_variable", 
+              label = "Choose a variable to be shown:",
+              choices = c("Price", "Revenue", "Sales"), 
+              selected = "Price"
+            )
+          ), 
+          
+        )
+      )
+    ),
+      
+    
+    fluidRow(
+      # ---- Box 1: Dropdown + Table ----
+      column(
+        width = 4,
+        card(
+          card_header("SKU price elasticity"),
+            dataTableOutput("my_elasticity", width = "70%")
+          )
+        )
+      ),
+      
+    fluidRow(
+      # ---- Box 2: Placeholder Content ----
+      column(
+        width = 12,
+        card_header("Box 2 Title"),
+        card_body(
+          plotlyOutput("plot_elast")
+        )
+      ),
+      
+      # ---- Box 3: Placeholder Content ----
+      column(
+        width = 4,
+        card(
+          card_header("Box 3 Title"),
+          card_body(
+            "More placeholder text or any UI you want."
+          )
+        )
+      )
+    )
+  ), 
+  # --- Build Application Tab
+  nav_panel(
+    "REAMDE!",
+    uiOutput("readme")
+=======
     uiOutput("build_app")
+>>>>>>> 7564aaad4ab926c27f2909d6071934eea1a94b97
   )
 )
 
