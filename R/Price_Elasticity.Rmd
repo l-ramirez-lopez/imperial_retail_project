@@ -1,0 +1,278 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r, include=FALSE}
+library(knitr)
+library(dplyr)
+library(lubridate)
+library(forecast)
+library(tseries)
+library(vars)
+library(stargazer)
+library(purrr)
+library(data.table)
+
+```
+
+
+Calculate AdStock variable for each SKU and week
+```{r, message=FALSE, warning=FALSE}
+
+# Convert feat_main_page to numeric before computing Adstock
+datar_w_cp$feat_main_page <- as.numeric(
+  as.character(
+    datar_w_cp$feat_main_page
+    )
+)
+
+# Define carryover decay parameter
+lambda <- 0.7
+
+# Compute Adstock separately for each SKU
+df <- datar_w_cp %>%
+  arrange(sku, week) %>%
+  group_by(sku) %>%
+  mutate(Adstock = accumulate(feat_main_page, ~ .x + lambda * .y, .init = first(feat_main_page))[-1]) %>%
+  ungroup()
+```
+
+Create new time dimension variables from the week
+```{r}
+df <- df %>%
+  mutate(week_dt = as.Date(week, origin = "1970-01-01")) %>%
+  mutate(
+    year = year(week_dt),                # Extract year from date
+    month = month(week_dt)
+  #  quarter = quarter(week_dt),          # Extract quarter from date
+  # running_quarter = (year - min(year)) * 4 + quarter # Compute continuous quarter index
+  )
+```
+
+```{r}
+print(df)
+```
+
+Set up the optimization model
+```{r}
+sales.optim <- function(x, price,com_price, year, monthofyear, adstock, sales){
+  #assigning parameters
+  const <- x[1]
+  trend_base <- x[2]
+  adeffect <- x[3]
+  competitor_elasticity <-  x[4]
+  elasticity <- x[5]
+  s1 <- x[6]
+  s2 <- x[7]
+  s3 <- x[8]
+  s4 <- x[9]
+  s5 <- x[10]
+  s6 <- x[11]
+  s7 <- x[12]
+  s8 <- x[13]
+  s9 <- x[14]
+  s10 <- x[15]
+  s11 <- x[16]
+  s12 <- x[17]
+  #Calculations
+  seasonal_index <- case_when(
+    monthofyear == 1  ~ s1,
+    monthofyear == 2  ~ s2,
+    monthofyear == 3  ~ s3,
+    monthofyear == 4  ~ s4,
+    monthofyear == 5  ~ s5,
+    monthofyear == 6  ~ s6,
+    monthofyear == 7  ~ s7,
+    monthofyear == 8  ~ s8,
+    monthofyear == 9  ~ s9,
+    monthofyear == 10 ~ s10,
+    monthofyear == 11 ~ s11,
+    monthofyear == 12 ~ s12,
+    TRUE ~ 1  # Default case (optional, in case of missing values)
+  )
+
+predict <- const * (trend_base^(year) + 
+                    adeffect * adstock) * 
+           ifelse(is.na(price / com_price), 0, (price / com_price) ^ (-competitor_elasticity)) *  # Competitor Price Effect
+           (price ^ (-elasticity)) *  # Own Price Effect
+           seasonal_index
+  mape <- mean(abs((sales - predict) / pmax(sales, 0.01)),na.rm = TRUE)
+
+  return(mape)
+}
+```
+
+Run optimization model for each SKU and present results in table
+```{r}
+optimize_by_sku <- function(df) {
+  df$sku <- as.character(df$sku)  # Convert SKU to character
+
+  sku_groups <- df %>% group_split(sku)
+  results_list <- list()
+
+  for (sku_df in sku_groups) {
+    sku_value <- unique(sku_df$sku)
+    print(paste("Optimizing SKU:", sku_value))
+
+    # Initial guess with constraints to prevent extreme values
+    initial_guess <- c(
+      mean(sku_df$weekly_sales, na.rm = TRUE),  # Reasonable constant
+      1,  # Trend (must be stable)
+      1,  # Adstock effect
+      1,  # Competitor Price Elasticity
+      1,  # Elasticity 
+      1, 1, 1, 1,1, 1, 1, 1,1, 1, 1, 1  # Seasonal indices
+    )
+
+    # Define lower and upper bounds for stability
+    lower_bounds <- c(0, 0.8,0,-10,-10, 0, 0, 0, 0,0, 0, 0, 0,0, 0, 0, 0)
+    upper_bounds <- c(Inf, 2,Inf,10,10, 2, 2, 2, 2,2, 2, 2, 2,2, 2, 2, 2)
+
+    # Run constrained optimization
+    result <- optim(par = initial_guess, 
+                    fn = sales.optim, 
+                    price = sku_df$price, 
+                    com_price = sku_df$com_price,
+                    monthofyear = sku_df$month, 
+                    year = sku_df$trend, 
+                    adstock = sku_df$Adstock, 
+                    sales = sku_df$weekly_sales, 
+                    method = "L-BFGS-B",
+                    lower = lower_bounds, upper = upper_bounds)
+
+    best_params <- result$par
+
+#    results_list[[sku_value]] <- tibble(
+#      sku = sku_value,
+#      const = best_params[1], trend = best_params[2], adeffect = best_params[3],competitor_elasticity=best_params[4],
+#      elasticity = best_params[5], s1 = best_params[6], s2 = best_params[7],
+#      s3 = best_params[8], s4 = best_params[9], mape = result$value
+#    )
+    
+    results_list[[sku_value]] <- tibble(
+      sku = sku_value,
+      competitor_elasticity=best_params[4],
+      elasticity = best_params[5], mape = result$value
+    )
+    
+  }
+
+  df_results <- bind_rows(results_list)
+  return(df_results)
+}
+
+# Run SKU optimization
+sku_optimization_results <- optimize_by_sku(df)
+
+# View results
+print(sku_optimization_results)
+
+```
+
+
+
+```{r}
+# Compute average MAPE across all SKUs
+average_mape <- mean(sku_optimization_results$mape, na.rm = TRUE)
+
+# Print result
+print(paste("Average MAPE across all SKUs:", round(average_mape, 4)))
+
+```
+
+This is a custom function to calculate the change in demand, revenue for a given % change in price for chosen SKU
+
+```{r}
+calculate_sales_revenue_change <- function(sku, price_change_pct, sku_optimization_results, df) {
+  # Retrieve elasticity for the given SKU from the optimization results
+  elasticity_value <- sku_optimization_results %>%
+    filter(sku == !!sku) %>%
+    pull(elasticity)
+  # Retrieve competitor elasticity for the given SKU from the optimization results
+  comp_elasticity_value <- sku_optimization_results %>%
+    filter(sku == !!sku) %>%
+    pull(competitor_elasticity)
+
+  # Ensure SKU exists in both datasets
+  if (length(elasticity_value) == 0) {
+    stop(paste("Error: SKU", sku, "not found in sku_optimization_results."))
+  }
+
+  # Filter data for the given SKU
+  sku_data <- df %>% filter(sku == !!sku)
+
+  # Convert to Date format
+  sku_data$week <- as.Date(sku_data$week, format = "%d/%m/%Y")
+
+  # Extract current price and sales for the SKU
+  current_price <- sku_data$price
+  current_sales <- sku_data$weekly_sales
+
+  # Compute new price after applying price change percentage
+  new_price <- current_price * (1 + price_change_pct / 100)
+
+  # Compute new sales quantity using price elasticity formula
+  new_sales_qty <- current_sales * (new_price / current_price) ^ (-elasticity_value)
+
+  # Compute revenue before and after price change
+  old_revenue <- current_sales * current_price
+  new_revenue <- new_sales_qty * new_price
+
+  # Compute percentage change in sales quantity and revenue
+  sales_qty_change_pct <- ((new_sales_qty - current_sales) / current_sales) * 100
+  revenue_change_pct <- ((new_revenue - old_revenue) / old_revenue) * 100
+
+  # Append computed columns to original sku_data
+  sku_data$new_sales_qty <- new_sales_qty
+  sku_data$old_revenue <- old_revenue
+  sku_data$new_revenue <- new_revenue
+  sku_data$sales_qty_change_pct <- sales_qty_change_pct
+  sku_data$revenue_change_pct <- revenue_change_pct
+  sku_data$new_price <- new_price
+  sku_data$price_change_pct <- price_change_pct
+  sku_data$price_elasticity <- elasticity_value
+  sku_data$competitor_price_elasticity <- comp_elasticity_value
+
+  # Return the updated data frame
+  return(sku_data)
+}
+
+# Call the function
+result <- calculate_sales_revenue_change(20, -10, sku_optimization_results,df)
+
+# Print results
+print(result)
+```
+
+run the above function for 5 SKUs and save results in CSV
+```{r}
+# List of SKUs to process
+sku_list <- c(15, 32, 12, 31, 23)
+
+# Set price change percentage
+price_change_pct <- -10
+
+# Loop through SKUs, run function, and combine results
+all_results <- do.call(rbind, lapply(sku_list, function(sku) {
+  calculate_sales_revenue_change(sku, price_change_pct, sku_optimization_results, df)
+}))
+
+# Save the combined result to CSV
+write.csv(all_results, "price_change_analysis_selected_skus.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+# Filter for SKU 15
+sku_15_data <- all_results[all_results$sku == 15,]
+
+# Plot
+plot(sku_15_data$week, sku_15_data$new_sales_qty, 
+     xlab = "Week", ylab = "New Sales Quantity",
+     main = "New Sales Quantity Over Time (SKU 15)")
+```

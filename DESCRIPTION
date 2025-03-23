@@ -1,0 +1,42 @@
+Package: rma
+Type: Package
+Title: shiny dashboard for the final retail and marketing analytics project
+Version: 0.0.2
+Date: 2025-03-21
+Author: 
+  Annie Ng 
+  Leonardo Ramirez-Lopez 
+  Milton Caluya 
+  Seliyan Silvarajoo 
+  Wingyan Chan
+Maintainer: 
+  someone <someone@gmail.com>
+Depends: R (>= 4.1)
+Description: shiny dashboard for the final retail and marketing analytics project
+License: file LICENSE
+URL: https://github.com/l-ramirez-lopez/imperial_retail_project
+Imports: 
+    bslib,
+    data.table,
+    dplyr,
+    DT,
+    forecast,
+    fs,
+    ggplot2,
+    htmltools,
+    httr,
+    jsonlite,
+    knitr,
+    lubridate,
+    plotly,
+    purrr,
+    shiny,
+    shinyalert,
+    shinyjs,
+    shinyWidgets,
+    stargazer,
+    tseries,
+    vars
+Encoding: UTF-8
+RoxygenNote: 7.3.2
+Config/VersionName: BAO

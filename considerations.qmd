@@ -1,0 +1,10 @@
+---
+title: "considerations"
+format: html
+editor: visual
+---
+
+# 5. Advertising effectiveness
+
+-  you can apply data models to assess the impact of advertising goals, using AIDA principles to track customer journey stages. Integrating ELM into the dashboard helps refine ad designs by identifying which messaging appeals to logical versus emotional triggers. 
+The dashboard also allows for structured pre- and post-campaign analysis, measuring ad performance in real time, and mimicking the Adstock model by evaluating ad effectiveness over time. This path gives you an in-depth, data-driven understanding of how advertising impacts consumer behaviour and strategic decision-making.

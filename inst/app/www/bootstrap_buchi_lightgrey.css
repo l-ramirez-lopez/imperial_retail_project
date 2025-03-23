@@ -1,0 +1,216 @@
+/*!
+ * Theme BUCHI light grey
+ * Based on Bootstrap
+*/
+                             .material-switch > label::after {
+                             height: 16px;
+                             width: 16px;
+                             top: 0px;
+                             }
+                             .selectize-input.focus {
+                             border-color: #23a784;
+                             }
+                             code {
+                             color: #3d4989;
+                             background-color: transparent;
+                             padding: 0px 0px;
+                             font-size: 80%;
+                             }
+                             a:hover {
+                             color: #3d4989;
+                             }
+                             .irs-slider {
+                             top: 19px;
+                             width: 6px;
+                             height: 20px;
+                             background: white;
+                             border: 1px solid #6389a6c2;
+                             }
+                             .irs-grid-pol {
+                             opacity: 0.7;
+                             background: #35b679;
+                             }
+                             .js-irs-1 .irs-single,
+                             .js-irs-1 .irs-bar-edge,
+                             .js-irs-1 .irs-bar, .irs-from, .irs-to
+                             {
+                             color: #000;
+                             background: none;
+                             border-top: none;
+                             border-bottom: none;}
+                             .irs-single, .irs-bar, .irs-bar-edge, .irs-min, .irs-max
+                             {
+                             background: none;
+                             border-top: none;
+                             border-bottom: none;
+                             }
+                             /* logo */
+                             .skin-blue .main-header> .logo {
+                             background-color: #84BA00;
+                             border-right: none;
+                             color: #FFFFFF;
+                             font-family: Consolas;
+                             }
+                             .control-label{
+                             color: #FFF;
+                             }
+                             /* logo when hovered */
+                             .skin-blue .main-header .logo:hover {
+                             background-color: #E6E6E6;
+                             }
+                             /* navbar (rest of the header) */
+                             .skin-blue .main-header .navbar {
+                             background-color: #9ED400;
+                             }
+                             .dataTables_wrapper {
+                             font-family: arial;
+                             }
+                             /* color of the (value) boxes */
+                             .small-box .inner {
+                             vbackground-color: #9ED400;
+                             }
+                             
+                              /* color of the text x of x below the tables */
+                             .dataTables_wrapper div.dataTables_info {
+                             color: black
+                             }
+                             
+                             .bttn-stretch.bttn-default{
+                             //padding: 5px 55px;
+                             color: #1A1A1A;
+                             }
+                             
+
+                             
+                             /* Download button */
+                             .download_this, .download_this::before{
+                             font-size: 20px;
+                             font-family: inherit;
+                             padding: 5px 35px;
+                             outline: none;
+                             transition: all .2s cubic-bezier(.02,.01,.47,1);
+                             margin: 5px 0px 0px 0px;
+                             border-color: transparent;
+                             font-weight: 400;
+                             cursor: pointer;
+                             position: relative;
+                             font-size: 20px;
+                             font-family: inherit;
+                             padding: 5px 12px;
+                             overflow: hidden;
+                             border-width: 0;
+                             border-radius: 0;
+                             background: transparent;
+                             color: #fff;
+                             letter-spacing: 0;
+                             text-transform: none;
+                             box-sizing: border-box;
+                             line-height: inherit;
+                             }
+                             
+                             .download_this:active, .download_this:focus, .download_this:hover{
+                             outline: none;
+                             border:1px solid hsla(0,0%,100%,.4);
+                             border-radius: 4px;
+                             transition: all .3s cubic-bezier(.02,.01,.47,1);
+                             background: transparent;
+                             color: #9ED400;
+                             }
+                             
+                             .col-sm-4 div.box {
+                             border-top-color: #CCCCCC
+                             }
+                             
+                             .skin-black .main-header .navbar>.sidebar-toggle {
+                             border-right: none;
+                             }
+                             
+                             /*.sidebar-toggle:hover {*/
+                             /*  background-color: #FF0000;*/
+                             /*}*/
+                             
+                             .skin-black .sidebar-menu>li>a {
+                             border-left: none;
+                             }
+                             .skin-black .sidebar-menu>li.active>a, .skin-black .sidebar-menu>li:hover>a {
+                             background: none;
+                             border-left: none;
+                             }
+                             
+                             /* color of the borders in the tabs that are selected in the sidebar */
+                             .skin-blue .sidebar-menu > li.active > a {
+                             border-left-color: #9ED400;
+                             }
+                             
+                             /* color of the borders in the tabs that are selected in the sidebar */
+                             .skin-blue .sidebar-menu > li > a:hover {
+                             border-left-color: #CCCCCC;
+                             }
+                             
+                             .nav-tabs-custom> .nav-tabs>li.active {
+                             border-top-color: transparent;
+                             }
+                             label {
+                             font-weight: 400;
+                             }
+                             .main-header .logo {
+                             font-family: 'Roboto Condensed', sans-serif;
+                             font-weight: normal;
+                             font-size: 24px;
+                             }
+                             .main-sidebar, .left-side {
+                             width: 300px;
+                             }
+                             @media (min-width: 768px) {
+                             .content-wrapper,
+                             .right-side,
+                             .main-footer {
+                             background-color: #E6E6E6;
+                             margin-left: 300px;
+                             }
+                             }
+                             @media (max-width: 767px) {
+                             .sidebar-open .content-wrapper,
+                             .sidebar-open .right-side,
+                             .sidebar-open .main-footer {
+                             -webkit-transform: translate(250px, 0);
+                             -ms-transform: translate(250px, 0);
+                             -o-transform: translate(250px, 0);
+                             transform: translate(250px, 0);
+                             }
+                             }
+                             @media (max-width: 767px) {
+                             .main-sidebar,
+                             .left-side {
+                             -webkit-transform: translate(-250px, 0);
+                             -ms-transform: translate(-250px, 0);
+                             -o-transform: translate(-250px, 0);
+                             transform: translate(-250px, 0);
+                             }
+                             }
+                             @media (min-width: 768px) {
+                             .sidebar-collapse .main-sidebar,
+                             .sidebar-collapse .left-side {
+                             -webkit-transform: translate(-250px, 0);
+                             -ms-transform: translate(-250px, 0);
+                             -o-transform: translate(-250px, 0);
+                             transform: translate(-250px, 0);
+                             }
+                             @import url('https://fonts.googleapis.com/css?family=Reem+Kufi');
+                             h1 {
+                             font-family: 'Gill Sans', sans-serif;
+                             font-weight: 500;
+                             line-height: 0.3;
+                             
+                             }
+                             h2 {
+                             font-family: 'Gill Sans', sans-serif;
+                             font-size: 24px;
+                             color: #CCCCCC;
+                             }
+                             /* label { */
+                             /* color: #FFFFFF;*/
+                             /* }*/
+                            
+                             
+                             }
