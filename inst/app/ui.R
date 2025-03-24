@@ -1,16 +1,12 @@
-library(shiny)
-library(bslib)
-library(plotly)
-library(shinyWidgets)
-library(shinyjs)
-
-
-
+# Example data placeholders (replace with your actual data)
+my_lambdas <- data.frame(lambda_user = c("0.7 (high)", "0.5 (medium)", "0.3 (low)"))
+min_price_change <- -10
+max_price_change <- 10
 
 imperial_logo <- paste0(
-  "<img src='business-school-logo.png'",  
-  "height='40px'", 
-  "style='position: absolute; right: 20px; top: 10px;' />"
+  "<img src='business-school-logo.png' ",
+  "height='40px' ",
+  "style='position: absolute; left: 20px; top: 10px; z-index: 0;' />"
 )
 
 app_theme <- bs_theme(
@@ -23,28 +19,15 @@ app_theme <- bs_theme(
   font_scale = 0.95,
   base_font = font_google("Lato"),
   code_font = font_google("Lato")
-  # "font-size-base" = "0.75rem", "enable-rounded" = FALSE
 )
-
 
 browser_title <- "> r&ma"
 service_title <- "> r&ma"
 
-# app_side_bar <- sidebar(
-#   hr(), 
-#   tags$a(
-#     href = "https://github.com/l-ramirez-lopez/imperial_retail_project",
-#     "Visit our project in GitHub",
-#     target = "_blank"
-#   )
-# )
-
 app_nav_bar <- page_navbar(
-  # sidebar = app_side_bar,
-  title = HTML(paste0(service_title, imperial_logo)),
+  title = HTML(paste0(service_title)),
   theme = app_theme,
   
-  # --- Summary Tab
   nav_panel(
     "Overview",
     fluidRow(
@@ -60,51 +43,41 @@ app_nav_bar <- page_navbar(
     )
   ),
   
-  # --- File Summary Tab
   nav_panel(
     "Demand forecasting",
     uiOutput("demand_forecasting")
   ),
   
-  # --- Build Application Tab
   nav_panel(
     "Feature promotion",
     fluidRow(
-     column(
+      column(
         width = 4,
         card(
           card_header("Feature promotion impact: Sales comparison"),
-          card_body(
-            plotlyOutput("plot_sales")
-          )
+          card_body(plotlyOutput("plot_sales"))
         )
       ), 
       column(
         width = 4,
         card(
           card_header("Incremental sales from feature promotion"),
-          card_body(
-            plotlyOutput("plot_incremental")
-          )
+          card_body(plotlyOutput("plot_incremental"))
         )
       ), 
-     column(
-       width = 4,
-       card(
-         card_header("Incremental revenue from feature promotion"),
-         card_body(
-           plotlyOutput("plot_revenue")
-         )
-       )
-     )
+      column(
+        width = 4,
+        card(
+          card_header("Incremental revenue from feature promotion"),
+          card_body(plotlyOutput("plot_revenue"))
+        )
+      )
     )
   ),
   
-  # --- Build Application Tab
   nav_panel(
     "Price elasticity and scenario testing",
     fluidRow(
-      # ---- Box 1: Dropdown + Table ----
       column(
         width = 4,
         card(
@@ -116,7 +89,7 @@ app_nav_bar <- page_navbar(
               choices = my_lambdas$lambda_user, 
               selected = "0.7 (high)"
             )
-          ), 
+          ),
           height = "275px"
         )
       ), 
@@ -130,7 +103,7 @@ app_nav_bar <- page_navbar(
               label = "Pick a value for the price change:",
               min = min_price_change,
               max = max_price_change,
-              value = 0,  # Center value
+              value = 0,
               step = 1
             ),
             selectInput(
@@ -139,47 +112,34 @@ app_nav_bar <- page_navbar(
               choices = c("Price", "Revenue", "Sales"), 
               selected = "Price"
             )
-          ), 
-          
+          )
         )
       )
     ),
-      
-    
     fluidRow(
-      # ---- Box 1: Dropdown + Table ----
       column(
         width = 4,
         card(
           card_header("SKU price elasticity"),
-            dataTableOutput("my_elasticity", width = "70%")
-          )
+          dataTableOutput("my_elasticity", width = "70%")
         )
-      ),
-      
+      )
+    ),
     fluidRow(
-      # ---- Box 2: Placeholder Content ----
       column(
         width = 12,
         card_header("Box 2 Title"),
-        card_body(
-          plotlyOutput("plot_elast")
-        )
+        card_body(plotlyOutput("plot_elast"))
       ),
-      
-      # ---- Box 3: Placeholder Content ----
       column(
         width = 4,
         card(
           card_header("Box 3 Title"),
-          card_body(
-            "More placeholder text or any UI you want."
-          )
+          card_body("More placeholder text or any UI you want.")
         )
       )
     )
   ), 
-  # --- Build Application Tab
   nav_panel(
     "REAMDE!",
     uiOutput("readme")
@@ -192,26 +152,89 @@ ui <- tagList(
   tags$head(
     tags$title(browser_title),
     
-    # Load the Cabin Sketch Google Font
+    # Load the Ubuntu Mono Google Font
     tags$link(
-      href = "https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap", 
-      rel = "stylesheet"
+      rel = "stylesheet",
+      href = "https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css"
     ),
     
-    # Add custom CSS for the title using the correct navbar-brand class
+    # Custom CSS for pinned bars and spacing adjustments
     tags$style(HTML("
-    .navbar-brand {
-      font-family: 'Ubuntu Mono', monospace;  /* Apply Ubuntu Mono to the title */
-      font-size: 20px;  /* Adjust the font size as needed */
-      color: #E69F00;  /* Adjust the title color if needed */
-    }
+      /* Style for the top stripe */
+      .custom-top-bar {
+        background-color: #101010;
+        color: #B3B3B3;
+        padding: 10px 20px;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 9999;
+      }
       
-      /* Override the sidebar width */
-      div {
-        --_sidebar-width: 400px !important;
+      /* Style for the bottom stripe */
+      .custom-bottom-bar {
+        background-color: #101010;
+        color: #B3B3B3;
+        padding: 10px 20px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 9999;
+      }
+      
+      /* Additional body padding to avoid overlapping by fixed elements */
+      body {
+        padding-top: 80px;    /* Increase if the top stripe is taller */
+        padding-bottom: 60px; /* For the bottom stripe */
       }
     "))
   ),
-  app_nav_bar
+  
+  # Top stripe
+  tags$div(
+    class = "custom-top-bar",
+    fluidRow(
+      column(
+        width = 4,
+        HTML(paste0(imperial_logo))
+      ),
+      column(
+        width = 4,
+        tags$p("Retail and marketing analytics - Final project", style = "text-align: center; margin: 0;")
+      ),
+      column(
+        width = 4,
+        tags$p("Group 01", style = "text-align: right; margin: 0;")
+      )
+    )
+  ),
+  
+  # Wrap the navbar in a container that applies a margin-top
+  tags$div(
+    style = "margin-top: 50px;",  #/* This pushes the navbar down below the top stripe */
+      app_nav_bar
+  ),
+  
+  # Bottom stripe
+  tags$div(
+    class = "custom-bottom-bar",
+    fluidRow(
+      column(
+        width = 4,
+        tags$a(
+          href = "https://github.com/l-ramirez-lopez/imperial_retail_project",
+          target = "_blank",
+          tags$i(class = "mdi-github mdi", style = "font-size: 24px; margin: 0;")
+        )
+      ),
+      column(
+        width = 4,
+        tags$p("Some middle text", style = "text-align: center; margin: 0;")
+      ),
+      column(
+        width = 4,
+        tags$p("Contact Info", style = "text-align: right; margin: 0;")
+      )
+    )
+  )
 )
-
