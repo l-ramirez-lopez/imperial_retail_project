@@ -22,6 +22,15 @@ library(purrr)
 library(data.table)
 
 
+ip <- installed.packages()
+if (!"rma" %in% ip[, "Package"]) {
+  remotes::install_github(
+    "l-ramirez-lopez/imperial_retail_project", 
+  )
+}
+
+library("rma")
+
 min_price_change <- -40
 max_price_change <- 40
 
