@@ -22,10 +22,15 @@ app_theme <- bs_theme(
 )
 
 browser_title <- "> r&ma"
-service_title <- "> r&ma"
+service_title <- tags$a(
+  "> SKU dashboard",
+  href = "https://github.com/l-ramirez-lopez/imperial_retail_project",
+  target = "_blank",
+  style = "color: #E69F00; text-decoration: none;"
+)
 
 app_nav_bar <- page_navbar(
-  title = HTML(paste0(service_title)),
+  title = service_title,
   theme = app_theme,
   
   nav_panel(
@@ -224,7 +229,10 @@ ui <- tagList(
         tags$a(
           href = "https://github.com/l-ramirez-lopez/imperial_retail_project",
           target = "_blank",
-          tags$i(class = "mdi-github mdi", style = "font-size: 24px; margin: 0;")
+          tags$i(
+            class = "mdi-github mdi v-icon notranslate",
+            style = "font-size: 24px; height: 24px; width: 24px;"
+          )
         )
       ),
       column(
