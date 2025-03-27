@@ -31,6 +31,9 @@ if (!"rma" %in% ip[, "Package"]) {
 
 library("rma")
 
+my_sku_table <- data.frame("SKU ID" = 1:44, Name = paste0("SKU_", 1:44), check.names = F)
+
+
 min_price_change <- -40
 max_price_change <- 40
 
@@ -38,6 +41,7 @@ data("data_w_competitor", "data_raw", "data_processed")
 data("elasticity_optim_03", "elasticity_optim_05", "elasticity_optim_07")
 
 data("data_w_competitor", "data_raw", "data_processed")
+data("all_forecasts_ci")
 
 df <- datar_w_cp %>%
   mutate(week_dt = as.Date(week, origin = "1970-01-01")) %>%
@@ -114,7 +118,10 @@ for (i in sort(unique(datap$sku))) {
 names(sku_price_change_lims) <- paste0("sku_", sort(unique(datap$sku)))
 
 
-# 
+
+"/home/leo/github/imperial_retail_project/inst/app/www/code/demand_forecast/data/"
+
+
 # datap <- read.csv("inst/app/www/data/data_processed.csv")
 # datar <- read.csv("inst/app/www/data/data_raw.csv")
 # datar_w_cp <- read.csv("inst/app/www/data/data_processed with competitor price v2.csv")
@@ -128,6 +135,9 @@ names(sku_price_change_lims) <- paste0("sku_", sort(unique(datap$sku)))
 # datar <- read.csv("www/data/data_raw.csv")
 # datar_w_cp <- read.csv("www/data/data_processed with competitor price.csv")
 
+
+
+# save(all_forecasts_ci, file = "data/all_forecasts_ci.rda", compress = "bzip2")
 
 # save(elasticity_optim_03, file = "data/elasticity_optim_03.rda", compress = "bzip2")
 # save(elasticity_optim_05, file = "data/elasticity_optim_05.rda", compress = "bzip2")

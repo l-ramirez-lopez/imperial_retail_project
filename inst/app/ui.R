@@ -47,11 +47,33 @@ app_nav_bar <- page_navbar(
       )
     )
   ),
-  
   nav_panel(
     "Demand forecasting",
-    uiOutput("demand_forecasting")
-  ),
+    fluidRow(
+      column(
+        width = 4,
+        card(
+          card_header("SKU selection"),
+          dataTableOutput("my_sku_table", width = "70%")
+        )
+      ), 
+      column(
+        width = 3,
+        materialSwitch(
+          inputId = "my_switch_aggregate",
+          label = "Aggregate Data", 
+          value = TRUE,
+          status = "primary",
+          right = TRUE
+        )
+      )
+    ), 
+    fluidRow(
+      column(
+        width = 12,
+        plotlyOutput("plot_forecats")
+      )
+    )),
   
   nav_panel(
     "Feature promotion",

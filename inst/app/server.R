@@ -159,4 +159,41 @@ shinyServer(function(input, output, session) {
     output$plot_revenue <- renderPlotly({prevenue})
   })
   
+  
+  observe({
+    output$my_sku_table <- renderDataTable({
+      DT::datatable(
+        my_sku_table,
+        rownames = FALSE,
+        options = list(
+          pageLength = 44,
+          autoWidth = TRUE,
+          searching = FALSE,
+          columnDefs = list(
+            list(width = '150px', targets = "_all")
+          )
+        ),
+        # Use DT’s own selection approach
+        selection = list(
+          mode = "multiple",  
+          selected = 1       
+        ),
+        class = 'stripe hover order-column'
+      )
+    })
+  })
+    
+  observe({
+    req(input$my_sku_table_rows_selected)
+    selected_ids <- my_sku_table[["SKU ID"]][input$my_sku_table_rows_selected]
+    my_forecast_plot <- plot_forecast(
+      datap, 
+      all_forecasts_ci, 
+      sku_ids = as.character(selected_ids), 
+      aggregate_all = input$my_switch_aggregate 
+    )
+    output$plot_forecats <- renderPlotly({
+      my_forecast_plot
+    })
+  })
 })

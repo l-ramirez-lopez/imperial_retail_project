@@ -1,7 +1,7 @@
 Package: rma
 Type: Package
 Title: shiny dashboard for the final retail and marketing analytics project
-Version: 0.0.2
+Version: 0.0.3
 Date: 2025-03-21
 Author: 
   Annie Ng 
@@ -18,6 +18,7 @@ URL: https://github.com/l-ramirez-lopez/imperial_retail_project
 Imports: 
     bslib,
     broom,
+    caret,
     data.table,
     dplyr,
     DT,
@@ -29,6 +30,7 @@ Imports:
     jsonlite,
     knitr,
     lubridate,
+    nnet,
     plotly,
     purrr,
     shiny,
@@ -36,6 +38,7 @@ Imports:
     shinyjs,
     shinyWidgets,
     stargazer,
+    tidyr,
     tseries,
     vars
 Encoding: UTF-8
